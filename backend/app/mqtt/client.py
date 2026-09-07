@@ -1,5 +1,10 @@
 import json
+
 import paho.mqtt.client as mqtt
+
+from app.database import SessionLocal
+from app.services.sensor_service import process_sensor_data
+
 
 BROKER_HOST = "localhost"
 BROKER_PORT = 1883
@@ -7,16 +12,33 @@ BROKER_PORT = 1883
 TOPIC = "mine/+/sensors"
 
 
-def on_connect(client, userdata, flags, reason_code, properties=None):
+def on_connect(
+    client,
+    userdata,
+    flags,
+    reason_code,
+    properties=None
+):
+
     print("MQTT connected")
 
     client.subscribe(TOPIC)
 
-    print(f"Subscribed to: {TOPIC}")
+    print(
+        f"Subscribed to: {TOPIC}"
+    )
 
 
-def on_message(client, userdata, message):
+def on_message(
+    client,
+    userdata,
+    message
+):
+
+    db = SessionLocal()
+
     try:
+
         payload = message.payload.decode()
 
         print(
@@ -27,11 +49,36 @@ def on_message(client, userdata, message):
 
         data = json.loads(payload)
 
-        print("Parsed sensor data:")
-        print(data)
+        node_id = data["node_id"]
+        mq2 = float(data["mq2"])
+        ultrasonic = float(data["ultrasonic"])
+        ir = int(data["ir"])
+
+        result = process_sensor_data(
+            db=db,
+            node_id=node_id,
+            mq2=mq2,
+            ultrasonic=ultrasonic,
+            ir=ir
+        )
+
+        print(
+            "Sensor processing result:",
+            result
+        )
 
     except Exception as e:
-        print("MQTT message error:", e)
+
+        db.rollback()
+
+        print(
+            "MQTT message error:",
+            e
+        )
+
+    finally:
+
+        db.close()
 
 
 def start_mqtt():
