@@ -2,27 +2,70 @@ import json
 import time
 import paho.mqtt.client as mqtt
 
-data = {
-    "node_id": "NODE_01",
-    "mq2": 900,
-    "ultrasonic": 100,
-    "ir": 0
-}
 
-client = mqtt.Client(
-    mqtt.CallbackAPIVersion.VERSION2
-)
+BROKER_HOST = "localhost"
+BROKER_PORT = 1883
 
-client.connect("localhost", 1883, 60)
 
-client.publish(
-    "mine/NODE_01/sensors",
-    json.dumps(data)
-)
+def send_data(data):
 
-print("MQTT test data sent:")
-print(json.dumps(data))
+    client = mqtt.Client(
+        mqtt.CallbackAPIVersion.VERSION2
+    )
 
-time.sleep(1)
+    client.connect(
+        BROKER_HOST,
+        BROKER_PORT,
+        60
+    )
 
-client.disconnect()
+    topic = f"mine/{data['node_id']}/sensors"
+
+    client.publish(
+        topic,
+        json.dumps(data)
+    )
+
+    print("\nMQTT TEST DATA SENT")
+    print("Topic:", topic)
+    print("Data:", json.dumps(data))
+
+    time.sleep(1)
+
+    client.disconnect()
+
+
+# ==========================================
+# NODE 2 - GREEN
+# distance > 18 cm
+# ==========================================
+
+send_data({
+    "node_id": "NODE_2",
+    "ultrasonic": 25,
+    "status": "GREEN"
+})
+
+
+# ==========================================
+# NODE 2 - YELLOW
+# 15 < distance <= 18
+# ==========================================
+
+send_data({
+    "node_id": "NODE_2",
+    "ultrasonic": 17,
+    "status": "YELLOW"
+})
+
+
+# ==========================================
+# NODE 2 - RED
+# distance <= 15
+# ==========================================
+
+send_data({
+    "node_id": "NODE_2",
+    "ultrasonic": 10,
+    "status": "RED"
+})

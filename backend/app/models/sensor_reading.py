@@ -11,9 +11,13 @@ class SensorReading(Base):
 
     node_id = Column(String, index=True, nullable=False)
 
+    # NODE 1 sensors
     mq2 = Column(Float, nullable=True)
+    mq7 = Column(Float, nullable=True)
+    vibration = Column(Integer, nullable=True)
+
+    # NODE 2 sensor
     ultrasonic = Column(Float, nullable=True)
-    ir = Column(Integer, nullable=True)
 
     status = Column(String, default="GREEN")
 
